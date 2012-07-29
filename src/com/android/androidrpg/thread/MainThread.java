@@ -2,6 +2,7 @@ package com.android.androidrpg;
 
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.graphics.Canvas;
 
 public class MainThread extends Thread {
 
@@ -26,13 +27,31 @@ public class MainThread extends Thread {
 
   @Override
   public void run() {
+    Canvas canvas;
     long tickCount = 0L;
+
     Log.d(TAG, "Starting game loop");
 
     while (running) {
       tickCount++;
-      // update game state
-      // render state to the screen
+      canvas = null;
+
+      // try locking the canvas for exclusive pixel editing on the surface
+      try
+      {
+        canvas = this.surfaceHolder.lockCanvas();
+        synchronized (surfaceHolder)
+        {
+          this.gameWorld.onDraw(canvas);
+        }
+      }
+      finally
+      {
+        if (canvas != null)
+        {
+          surfaceHolder.unlockCanvasAndPost(canvas);
+        }
+      }
     }
 
     Log.d(TAG, "Game loop executed " + tickCount + " times");
